@@ -7,6 +7,8 @@ import json
 import pickle
 from datetime import datetime
 
+import sys
+sys.path.append('../src')
 from mdp import States, Actions, Transitions, Rewards, MDP
 
 
