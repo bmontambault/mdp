@@ -1,0 +1,61 @@
+<html>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<div class="nav">
+  <a class="active" href="/">Home</a>
+  <a href="/value_iteration">Value Iteration</a>
+  <a href="/policy_iteration">Policy Iteration</a>
+</div>
+
+<div>
+<h3>Dynamic Programming for Solving MDP's</h3>
+
+<p>Definition of MDP</p>
+
+<p>Why dynamic programming</p>
+
+<p>Conceptual overview of value iteration and policy iteration</p>
+
+<p>Intructions for working with the grid. Users will be able to select a cell and a) set it's reward or b) block it off. I'm also going to add a button that generates a random grid.</p>
+
+<div>
+	<div id='table1'>
+		{{table|safe}}
+	</div>
+</div>
+
+</div>
+
+
+<!-- <script type="text/javascript" src="{{ url_for('static', filename='generate_grid.js') }}"></script> -->
+<script type="text/javascript">
+
+
+	/*
+	$("#tableContainer").append(generateGrid(size, size, colors));
+
+	$("td").click(function() {
+	    var index = $( "td" ).index( this );
+	    var row = Math.floor( ( index ) / size) + 1;
+	    var col = ( index % size ) + 1;
+	    $( "span" ).text( "That was row " + row + " and col " + col );
+	    $( this ).css( 'background-color', 'red' );
+	});
+	*/
+
+
+</script>
+
+
+<style type="text/css">
+	
+	td {
+	    border: 1px solid;
+	    width: 50px;
+	    height: 50px;
+	}
+
+</style>
+
+</html>
