@@ -2,6 +2,7 @@ import numpy as np
 from colour import Color
 import collections
 import bisect
+import seaborn as sns
 
 
 class States:
@@ -17,7 +18,8 @@ class Actions:
         if actions is None:
             left_right = np.array([[-1,0], [1,0]])
             up_down = left_right[:,::-1]
-            self.actions = np.vstack((left_right, up_down))
+            stay = np.array([[0, 0]])
+            self.actions = np.vstack((left_right, up_down, stay))
         else:
             self.actions = actions
     
@@ -159,7 +161,21 @@ class MDP:
         grid += '</table>'
         return grid
     
-
+    
+    def get_grid_values(self):
+        
+        grid_values = np.zeros(shape=(self.states.size, self.states.size))
+        for i in range(len(self.values)):
+            x,y = self.states.states[i]
+            grid_values[x][y] = self.values[i]
+        return grid_values
+    
+    
+    def plot_grid_values(self):
+        
+        grid = self.get_grid_values()
+        sns.heatmap(np.round(grid,2), annot=True, cbar=False)
+        
     
     def get_policy(self):
         
@@ -170,15 +186,14 @@ class MDP:
                 self.transitions.transitions * (self.rewards.rewards + values)
             ).sum(axis=2).argmax(axis=1)
         
-"""
+    
 states = States()
 actions = Actions()
 transitions = Transitions(states, actions)
 
-states_rewards_dict = {(0,0):1}
+states_rewards_dict = {(5,5):100}
 rewards = Rewards(states, actions, states_rewards_dict)
 mdp = MDP(states, actions, transitions, rewards)
-        
+
 mdp.value_iteration()
 grid = mdp.make_grid_world()
-"""
