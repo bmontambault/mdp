@@ -4,31 +4,83 @@ import seaborn as sns
 
 class MDP:
     
-    def __init__(self, state_rewards_dict={}, blocked_states_list=[], discount=1, size=10):
+    """
+    MDP object that takes a set of states, a reward function, and discount
+    factor. Optimal policies can then be found via either value iteration
+    or policy iteration.
+    Parameters:
+        dict state_rewards_dict: (key,value) pairs of the form ((x,y), reward)
+        list blocked_state_list: each element is an x,y pair indicating a state
+                                 that cannot be traversed
+        float discount: discount factor between 0 and 1; higher values weigh
+                        future rewards closer to immediate rewards
+        int size: size of the grid of actions
+        list values: list of values for each state
+        list policy: list of policies for each state
+    """
+    def __init__(self, state_rewards_dict={},
+                 blocked_states_list=[],
+                 discount=1, size=10,
+                 values=None, policy=None):
         
         self.state_rewards_dict = state_rewards_dict
         self.blocked_states_list = blocked_states_list
         self.discount = discount
         self.size = size
         
-        self.states = self.get_states(size)
-        self.actions = self.get_actions()
-        self.blocked_states = self.get_blocked_states(self.states, self.blocked_states_list)
+        self.states = self.get_states_(size)
+        self.actions = self.get_actions_()
+        self.blocked_states = self.get_blocked_states_(
+                self.states,
+                self.blocked_states_list
+            )
         
-        self.transitions = self.get_transitions(self.states, self.actions, self.blocked_states)
-        self.rewards = self.get_rewards(self.states, self.actions, state_rewards_dict)
+        self.transitions = self.get_transitions_(
+                self.states,
+                self.actions,
+                self.blocked_states
+            )
+        self.rewards = self.get_rewards_(
+                self.states,
+                self.actions,
+                state_rewards_dict
+            )
         
-        self.values = np.zeros(shape=self.states.shape[0])
-        self.values_i = [self.values.copy()]
-        
-    
-    def get_states(self, size):
+        if values is None:
+            self.values = np.zeros(shape=self.states.shape[0])
+        else:
+            self.values = values
+        if policy is None:
+            self.policy = np.random.randint(
+                    0,
+                    self.actions.shape[0]-1,
+                    size=self.states.shape[0]
+                )
+        else:
+            self.policy = policy
+            
+            
+    """
+    Take grid size and return (size, 2) array of state x,y coordinates
+    Parameters:
+        int size: size of grid
+    Returns:
+        array of size (size, 2), where each element is the x,y coordinates
+        of a state
+    """
+    def get_states_(self, size):
         
         states = np.mgrid[0:size, -0:size].reshape(2,-1).T
         return states
             
-            
-    def get_actions(self):
+    
+    """
+    Return a list of actions where each element is a pair of changes to x and
+    y coordinates
+    Returns:
+        (5, 2) array of actions; left, right, up, down, stay
+    """
+    def get_actions_(self):
         
         left_right = np.array([[-1,0], [1,0]])
         up_down = left_right[:,::-1]
@@ -37,7 +89,18 @@ class MDP:
         return actions
     
     
-    def get_blocked_states(self, states, blocked_states_list):
+    """
+    Take an array of states and a list of blocked states and return an
+    array of states with 0/1 indicating if the state can be traversed
+    Parameters:
+        array states: array of size (size, 2), where each element is the x,y
+                      coordinates of a state
+        list blocked_states_list: 
+    Returns:
+        array of where each element is a 0 or 1, indicating whether each state
+        can be traversed
+    """
+    def get_blocked_states_(self, states, blocked_states_list):
         
         blocked_states = np.array(
             [0 if tuple(state) in blocked_states_list
@@ -46,7 +109,21 @@ class MDP:
         return blocked_states
     
     
-    def get_transitions(self, states, actions, blocked_states):
+    """
+    Take arrays of states, actions and blocked states and return a (size, size)
+    array where each element indicates (0/1) the ability to transition between
+    two states
+    Parameters:
+        array states: array of size (size, 2), where each element is the x,y
+                      coordinates of a state
+        array actions: (5, 2) array of actions; left, right, up, down, stay
+        array blocked_states: array of where each element is a 0 or 1,
+                              indicating whether each state can be traversed
+    Returns:
+        (size, size) array where each element indicates whether each element
+        (s, s') indicates whether s' can be reached from s
+    """
+    def get_transitions_(self, states, actions, blocked_states):
         
         states_new = np.clip(
                 states[:,None] + actions[None,:],
@@ -60,7 +137,19 @@ class MDP:
         return transitions * blocked_states[None,None,:]
     
     
-    def get_rewards(self, states, actions, state_rewards_dict):
+    """
+    Take arrays of states, actions a dictionary of rewards and returns an array
+    with shape (#states, #actions, #states) where each element indicates the
+    reward gained from moving from state s to state s' from action a
+    Parameters:
+        array states: array of size (size, 2), where each element is the x,y
+                      coordinates of a state
+        array actions: (5, 2) array of actions; left, right, up, down, stay
+        dict state_rewards_dict: (key,value) pairs of the form ((x,y), reward)
+    Returns:
+        array with shape (#states, #actions, #states)
+    """
+    def get_rewards_(self, states, actions, state_rewards_dict):
         
         state_rewards = np.array(
             [state_rewards_dict[tuple(state)] if tuple(state) in state_rewards_dict
@@ -73,45 +162,134 @@ class MDP:
         return rewards
     
     
-    def get_values(self, prev_values, actions, rewards, transitions, blocked_states):
+    """
+    Expand list of values or policy of shape (#actions) to one of shape
+    (#states, #actions, #states)
+    Parameters:
+        array actions: (5, 2) array of actions; left, right, up, down, stay
+        array array: array of shape (#states) of either values or policies
+    Returns:
+        array with shape (#states, #actions, #states)
+    """
+    def expand_array_(self, actions, array):
         
         expanded_values =(
-                prev_values[None,:] * np.ones(prev_values.shape)[:,None]
+                array[None,:] * np.ones(array.shape)[:,None]
         )[:,None,:] * np.ones(actions.shape[0])[None,:,None]
-        new_values = (transitions * (rewards + self.discount*expanded_values)).sum(axis=2).max(axis=1)
-        return new_values * blocked_states
+        return expanded_values
     
     
-    def value_iteration_step(self):
+    """
+    Update values for each state given current state values
+    Returns:
+        array of shape (#states) where each element is the value of that state
+    """
+    def evaluate_values(self):
         
-        self.values = self.get_values(self.values_i[-1], self.actions, self.rewards, self.transitions, self.blocked_states)
-        self.values_i.append(self.values.copy())
+        expanded_values = self.expand_array_(self.actions, self.values)
+        return (self.transitions*(self.rewards + self.discount*expanded_values)
+                ).sum(axis=2).max(axis=1)
         
     
+    """
+    Find optimal policy given current state values
+    Returns:
+        array of shape (#states) where each element is the optimal policy at
+        that state
+    """
+    def optimize_policy(self):
+        
+        expanded_values = self.expand_array_(self.actions, self.values)
+        return (self.transitions*(self.rewards + self.discount*expanded_values)
+                ).sum(axis=2).argmax(axis=1)
+        
+        
+    """
+    Find optimal set values and policies for each state via value iteration
+    Parameters:
+        int max_iters: maximum number of iterations allowed before convergence
+        float eps: maximum distance allowed for convergence
+    Returns: None
+    """
     def value_iteration(self, max_iters=100, eps=.001):
         
         i = 0
         diff_size = np.inf
         while i < max_iters and diff_size > eps:
-            
-            self.value_iteration_step()
-            prev_values = self.values_i[-2]            
+            prev_values = self.values
+            self.values = self.evaluate_values()
             diff = prev_values - self.values
             diff_size = np.sqrt(diff.dot(diff))
             i+=1
-            
+        self.policy = self.optimize_policy()
     
-    def get_policy_(self, prev_values, actions, rewards, transitions, blocked_states):
+    
+    """
+    Update values for each state given current state values and the current
+    policy
+    Returns:
+        array of shape (#states) where each element is the optimal policy at
+        that state
+    """
+    def evaluate_policy_values(self):
         
-        expanded_values =(
-                prev_values[None,:] * np.ones(prev_values.shape)[:,None]
-        )[:,None,:] * np.ones(actions.shape[0])[None,:,None] * blocked_states[None,None,:]
-        new_values = (transitions * (rewards + self.discount*expanded_values)).sum(axis=2).argmax(axis=1)
-        return new_values
+        expanded_values = self.expand_array_(self.actions, self.values)
+        values = (
+                self.transitions*(self.rewards + self.discount*expanded_values)
+            ).sum(axis=2)
+        policy_values = np.array(
+                [values[i][self.policy[i]] for i in range(values.shape[0])]
+            )
+        return policy_values
     
     
-    def get_policy(self):
-        return self.get_policy_(self.values, self.actions, self.rewards, self.transitions, self.blocked_states)
+    """
+    Update values until convergence given the current policy
+    Parameters:
+        int max_iters: maximum number of iterations allowed before convergence
+        float eps: maximum distance allowed for convergence
+    Returns: None
+    """
+    def policy_evaluation(self, max_iters=100, eps=.001):
+        
+        i = 0
+        diff_size = np.inf
+        while i < max_iters and diff_size > eps:
+            prev_values = self.values
+            self.values = self.evaluate_policy_values()
+            diff = prev_values - self.values
+            diff_size = np.sqrt(diff.dot(diff))
+            i+=1
+    
+    
+    """
+    Find optimal policy given current values
+    Returns:
+        boolean indicating whether the policy has converged
+    """
+    def policy_improvement(self):
+        
+        prev_policy = self.policy
+        self.policy = self.optimize_policy()
+        stable = np.all(prev_policy == self.policy)
+        return stable
+    
+    
+    """
+    Find optimal set values and policies for each state via policy iteration
+    Parameters:
+        int max_iters: maximum number of iterations allowed before convergence
+        float eps: maximum distance allowed for convergence
+    Returns: None
+    """
+    def policy_iteration(self, max_iters=100):
+        
+        stable = False
+        i = 0
+        while i < max_iters and not stable:
+            self.policy_evaluation()
+            stable = self.policy_improvement()
+            i+=1
             
             
     def get_grid_values(self):
@@ -121,64 +299,27 @@ class MDP:
             x,y = self.states[i]
             grid_values[x][y] = self.values[i]
         return grid_values
-    
+        
+        
+    def get_grid_policy(self):
+        
+        grid_values = np.zeros(shape=(self.size, self.size))
+        for i in range(len(self.values)):
+            x,y = self.states[i]
+            grid_values[x][y] = self.policy[i]
+        return grid_values
+
     
     def plot_grid_values(self):
         
         grid = self.get_grid_values()
         sns.heatmap(np.round(grid,2), annot=True, cbar=False)
-        
-        
-    def get_grid_policy(self):
-        
-        policy = self.get_policy()
-        grid_values = np.zeros(shape=(self.size, self.size))
-        for i in range(len(self.values)):
-            x,y = self.states[i]
-            grid_values[x][y] = policy[i]
-        return grid_values
-    
-    
-    
-    
-    def policy_evaluation_step(self, prev_values, actions, rewards, transitions, blocked_states, policy):
-        
-        expanded_values =(
-                prev_values[None,:] * np.ones(prev_values.shape)[:,None]
-        )[:,None,:] * np.ones(actions.shape[0])[None,:,None] * blocked_states[None,None,:]
-        new_values = (transitions * (rewards + self.discount*expanded_values)).sum(axis=2)
-        new_values_policy = np.array([new_values[i][policy[i]] for i in range(new_values.shape[0])])
-        return new_values_policy
-    
-    
-    def policy_evaluation(self, policy, max_iters=100, eps=.001):
-        
-        i = 0
-        diff_size = np.inf
-        while i < max_iters and diff_size > eps:
-            
-            prev_values = self.values_i[-2]
-            new_values = self.policy_evaluation_step(
-                self.values_i[-1], self.actions, self.rewards, self.transitions, self.blocked_states, policy
-                )
-            self.values_i.append(new_values)
-            self.values = new_values            
-            diff = prev_values - self.values
-            diff_size = np.sqrt(diff.dot(diff))
-            i+=1
-            
-    
-    def policy_improvement_step(self):
-        
-        new_policy = self.get_policy()
-    
-    
-    
-    
 
-  
-mdp = MDP({(6,6):1, (0,0):1}, [(2,2), (2,3), (1,3), (0,3), (2,1), (2,0)], discount=.8)
-values = mdp.policy_evaluation()
+      
+#mdp = MDP({(6,6):1, (0,0):1}, [(2,2), (2,3), (1,3), (0,3), (2,1), (2,0)], discount=.8)
+#mdp.policy_iteration()
+
+#values = mdp.policy_evaluation()
 
 #mdp.value_iteration()
 #mdp.plot_grid_values()
