@@ -18,28 +18,38 @@
 
 <div>
 	<p><span style="color:red">(The buttons do things just not the correct things yet)</span></p>
-	<button type="button" onclick="next_iteration('table2')">value Iteration</button>
-	<button type="button" onclick="show_policy('table2')">show_policy</button>
-	<div id='table2'>
+	<button type="button" onclick="next_iteration('vi_table')">value Iteration</button>
+	<button type="button" onclick="show_policy('vi_table')">show policy</button>
+	<div id='vi_table'>
 		{{table|safe}}
 	</div>
 </div>
 
-<!-- <script type="text/javascript" src="{{ url_for('static', filename='generate_grid.js') }}"></script> -->
 <script type="text/javascript">
 
 	var size = {{size}}
+	var state_rewards_list = {{state_rewards_list|safe}}
+    var blocked_states_list = {{blocked_states_list|safe}}
+    var discount = {{discount}}
+    var values = {{values}}
+    var policy = {{policy}}
 
 	function next_iteration(table_id){
 
 		$.ajax({
 	        method:"GET",
-	        url:"/iterate",
-	        data:{"table_id": table_id},
+	        contentType: 'application/json',
+	        url:"/value_iteration_step",
+	        data:{"size": size,
+	    		  "state_rewards_list": state_rewards_list,
+	    		  "blocked_states_list": blocked_states_list,
+	    		  "discount": discount},
 	        success:function(resp, data){
 	            var response = JSON.parse(resp);
 	            var table = response['table']
 	            document.getElementById(table_id).innerHTML = table
+	            values = response['values']
+	            policy = response['policy']
 	        },
 	    });
 	}
