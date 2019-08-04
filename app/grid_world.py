@@ -52,7 +52,7 @@ def make_grid_world(values, policy, blocked_states_list,
                 val = ''
                 color = 'gray'
             elif show_policy:
-                val = ['&larr;', '&rarr;', '&uarr;', '&darr;'][policy[grid_num]]
+                val = ['&larr;', '&rarr;', '&uarr;', '&darr;', 'X'][policy[grid_num]]
                 color = colors[grid_num]
             else:
                 val = rounded_values[grid_num]

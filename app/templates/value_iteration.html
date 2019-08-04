@@ -18,9 +18,9 @@
 
 <div>
 	<p><span style="color:red">(The buttons do things just not the correct things yet)</span></p>
-	<button type="button" onclick="value_iteration('vi_table')">value Iteration</button>
-	<button type="button" onclick="show_policy('vi_table')">show policy</button>
-	<div id='vi_table'>
+	<button type="button" onclick="step('table')">value iteration</button>
+	<button type="button" onclick="show_policy('table')">show policy</button>
+	<div id='table'>
 		{{table|safe}}
 	</div>
 </div>
@@ -34,7 +34,7 @@
     var values = {{values}}
     var policy = {{policy}}
 
-	function value_iteration(table_id){
+	function update_table(table_id, url){
 
 		data = {"size": size,
 	    		  "state_rewards_list": state_rewards_list,
@@ -46,7 +46,7 @@
 		$.ajax({
 	        method:"POST",
 	        contentType: 'application/json',
-	        url:"/value_iteration_step",
+	        url: url,
 	        data:JSON.stringify(data),
 	    	dataType: 'json',
           	contentType: 'application/json; charset=utf-8',
@@ -61,18 +61,15 @@
 	}
 
 
+	function step(table_id){
+
+		update_table(table_id, "/value_iteration_step")
+	}
+
+
 	function show_policy(table_id){
 
-		$.ajax({
-	        method:"GET",
-	        url:"/policy",
-	        data:{"table_id": table_id},
-	        success:function(resp, data){
-	            var response = JSON.parse(resp);
-	            var table = response['table']
-	            document.getElementById(table_id).innerHTML = table
-	        },
-	    });
+		update_table(table_id, "/value_iteration_show_policy")
 	}
 
 

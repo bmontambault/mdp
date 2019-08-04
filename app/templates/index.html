@@ -20,7 +20,7 @@
 <p>Intructions for working with the grid. Users will be able to select a cell and a) set it's reward or b) block it off. I'm also going to add a button that generates a random grid.</p>
 
 <div>
-	<div id='table1'>
+	<div id='table'>
 		{{table|safe}}
 	</div>
 </div>
@@ -28,21 +28,38 @@
 </div>
 
 
-<!-- <script type="text/javascript" src="{{ url_for('static', filename='generate_grid.js') }}"></script> -->
 <script type="text/javascript">
 
-
-	/*
-	$("#tableContainer").append(generateGrid(size, size, colors));
+	var size={{size}}
+	var original_color = null
 
 	$("td").click(function() {
 	    var index = $( "td" ).index( this );
 	    var row = Math.floor( ( index ) / size) + 1;
 	    var col = ( index % size ) + 1;
-	    $( "span" ).text( "That was row " + row + " and col " + col );
-	    $( this ).css( 'background-color', 'red' );
+
+	    //save original class
+	    var cell_class = $(this).attr("class");
+
+	    //deselect other cells
+	    var selected = document.getElementsByClassName('selected')
+	    if (selected.length > 0){
+	    	cell = selected[0]
+	    	console.log(cell)
+	    	cell.classList.remove("selected")
+	    	cell.style.background = original_color
+	    }
+
+	    //if it wasn't selected originally, select cell
+	    if (typeof cell_class !== 'selected'){
+	    	$(this).addClass('selected')
+	    	original_color = $(this).css('background-color')
+	    	$( this ).css( 'background-color', 'yellow' );
+	    }
+
+
+	    //$( this ).css( 'background-color', 'yellow' );
 	});
-	*/
 
 
 </script>
