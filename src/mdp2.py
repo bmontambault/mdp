@@ -47,7 +47,7 @@ class MDP:
             )
         
         if values is None:
-            self.values = np.zeros(shape=self.states.shape[0])
+            self.values = self.rewards[0,0]
         else:
             self.values = values
         if policy is None:

@@ -18,7 +18,7 @@
 
 <div>
 	<p><span style="color:red">(The buttons do things just not the correct things yet)</span></p>
-	<button type="button" onclick="next_iteration('vi_table')">value Iteration</button>
+	<button type="button" onclick="value_iteration('vi_table')">value Iteration</button>
 	<button type="button" onclick="show_policy('vi_table')">show policy</button>
 	<div id='vi_table'>
 		{{table|safe}}
@@ -28,24 +28,30 @@
 <script type="text/javascript">
 
 	var size = {{size}}
-	var state_rewards_list = {{state_rewards_list|safe}}
-    var blocked_states_list = {{blocked_states_list|safe}}
+	var state_rewards_list = {{state_rewards_list}}
+    var blocked_states_list = {{blocked_states_list}}
     var discount = {{discount}}
     var values = {{values}}
     var policy = {{policy}}
 
-	function next_iteration(table_id){
+	function value_iteration(table_id){
 
-		$.ajax({
-	        method:"GET",
-	        contentType: 'application/json',
-	        url:"/value_iteration_step",
-	        data:{"size": size,
+		data = {"size": size,
 	    		  "state_rewards_list": state_rewards_list,
 	    		  "blocked_states_list": blocked_states_list,
-	    		  "discount": discount},
+	    		  "discount": discount,
+	    		  "values": values,
+	    		  "policy": policy}
+
+		$.ajax({
+	        method:"POST",
+	        contentType: 'application/json',
+	        url:"/value_iteration_step",
+	        data:JSON.stringify(data),
+	    	dataType: 'json',
+          	contentType: 'application/json; charset=utf-8',
 	        success:function(resp, data){
-	            var response = JSON.parse(resp);
+	            var response = resp;
 	            var table = response['table']
 	            document.getElementById(table_id).innerHTML = table
 	            values = response['values']
