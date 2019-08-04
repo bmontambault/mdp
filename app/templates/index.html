@@ -2,6 +2,7 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
+<body>
 <div class="nav">
   <a class="active" href="/">Home</a>
   <a href="/value_iteration">Value Iteration</a>
@@ -20,6 +21,9 @@
 <p>Intructions for working with the grid. Users will be able to select a cell and a) set it's reward or b) block it off. I'm also going to add a button that generates a random grid.</p>
 
 <div>
+	<input type="number" id='reward' value="0" disabled></input>
+    <button type="button" id="reward_button" onclick="update_reward(selected_row, selected_col)" disabled>update reward</button>
+	<button type="button" id="blocked_button" onclick="toggle_blocked(selected_row, selected_col)"disabled>toggle blocked</button>
 	<div id='table'>
 		{{table|safe}}
 	</div>
@@ -27,16 +31,33 @@
 
 </div>
 
+</body>
 
 <script type="text/javascript">
 
-	var size={{size}}
-	var original_color = null
+	var size = {{size}}
+	var state_rewards_list = {{state_rewards_list}}
+    var blocked_states_list = {{blocked_states_list}}
+    var discount = {{discount}}
+    var values = {{values}}
+    var policy = {{policy}}
 
-	$("td").click(function() {
+	var original_color = null
+	var selected_row = null
+	var selected_col = null
+
+	onclick="select(event)"
+	
+
+	$("#table").on('click', 'td', function() {
+
+		document.getElementById("reward").disabled = false;
+		document.getElementById("reward_button").disabled = false;
+		document.getElementById("blocked_button").disabled = false;
+
 	    var index = $( "td" ).index( this );
-	    var row = Math.floor( ( index ) / size) + 1;
-	    var col = ( index % size ) + 1;
+	    selected_row = Math.floor( ( index ) / size) + 1;
+	    selected_col = ( index % size ) + 1;
 
 	    //save original class
 	    var cell_class = $(this).attr("class");
@@ -45,7 +66,6 @@
 	    var selected = document.getElementsByClassName('selected')
 	    if (selected.length > 0){
 	    	cell = selected[0]
-	    	console.log(cell)
 	    	cell.classList.remove("selected")
 	    	cell.style.background = original_color
 	    }
@@ -57,9 +77,68 @@
 	    	$( this ).css( 'background-color', 'yellow' );
 	    }
 
-
-	    //$( this ).css( 'background-color', 'yellow' );
 	});
+	
+
+
+	function update_table(){
+
+		data = {"size": size,
+	    		  "state_rewards_list": state_rewards_list,
+	    		  "blocked_states_list": blocked_states_list,
+	    		  "discount": discount,
+	    		  "values": values,
+	    		  "policy": policy}
+
+		$.ajax({
+	        method:"POST",
+	        contentType: 'application/json',
+	        url: '/update',
+	        data:JSON.stringify(data),
+	    	dataType: 'json',
+          	contentType: 'application/json; charset=utf-8',
+	        success:function(resp, data){
+	            var response = resp;
+	            var table = response['table']
+	            document.getElementById('table').innerHTML = table
+	            values = response['values']
+	            policy = response['policy']
+	        },
+	    });
+	}
+
+
+	function update_reward(selected_row, selected_col){
+
+		var reward = parseInt(document.getElementById('reward').value)
+		state_rewards_list.push([[selected_row-1, selected_col-1], reward])
+		update_table();
+	}
+
+
+	function is_blocked(cell){
+
+		var idx = -1
+		for (var i=0; i<blocked_states_list.length; i++){
+			if (cell[0] == blocked_states_list[i][0] & cell[1] == blocked_states_list[i][1]){
+				idx = i
+			}
+		}
+		return idx
+	}
+
+	function toggle_blocked(selected_row, selected_col){
+
+		var cell = [selected_row-1, selected_col-1]
+		idx = is_blocked(cell)
+
+		if (idx == -1){
+			blocked_states_list.push(cell)
+		} else {
+			blocked_states_list.splice(idx, 1)
+		}
+		update_table();
+	}
 
 
 </script>

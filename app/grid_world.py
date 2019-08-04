@@ -57,7 +57,7 @@ def make_grid_world(values, policy, blocked_states_list,
             else:
                 val = rounded_values[grid_num]
                 color = colors[grid_num]
-            grid += f"<td align='center' style='background-color:{color}'>{val}</td>"
+            grid += f"<td align='center' id='{i}{j}' style='background-color:{color}'>{val}</td>"
             grid_num += 1
         grid += "</tr>"
     grid += '</table>'

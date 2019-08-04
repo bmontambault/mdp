@@ -47,6 +47,29 @@ def index():
                 values=mdp.values.tolist(),
                 policy=mdp.policy.tolist())
     
+    
+
+@app.route('/update', methods=['GET', 'POST'])
+def update():
+    
+    data = json.loads(request.data)
+    size = data['size']
+    state_rewards_list = data['state_rewards_list']
+    state_rewards_dict = {tuple(k):v for k,v in state_rewards_list}
+    blocked_states_list = [tuple(s) for s in data['blocked_states_list']]
+    discount = data['discount']
+    
+    mdp = MDP(state_rewards_dict, blocked_states_list,
+                     discount, size)
+    
+    min_reward = mdp.values.min()
+    max_reward = mdp.values.max()
+    table = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list,
+                            min_reward, max_reward)
+    
+    return json.dumps({'table': table, 'values': mdp.values.tolist(),
+            'policy': mdp.policy.tolist()})
+    
 
     
 @app.route('/value_iteration', methods=['GET','POST'])
