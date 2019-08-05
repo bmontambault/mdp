@@ -9,7 +9,7 @@ from datetime import datetime
 
 import sys
 sys.path.append('../src')
-from mdp2 import MDP
+from mdp import MDP
 from grid_world import make_grid_world
 
 path=os.path.dirname(os.path.realpath(__file__))
