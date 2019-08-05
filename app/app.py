@@ -8,11 +8,11 @@ import pickle
 from datetime import datetime
 
 import sys
-sys.path.append('../src')
+path=os.path.dirname(os.path.realpath(__file__))
+sys.path.append(path + '/../src')
 from mdp import MDP
 from grid_world import make_grid_world
 
-path=os.path.dirname(os.path.realpath(__file__))
 
 app=Flask(__name__)
 with open(path + '/secret_key.txt') as f:
