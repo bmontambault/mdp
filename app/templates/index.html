@@ -1,6 +1,9 @@
 <html>
 
+<head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+</head>
 
 <body>
 <div class="nav">
@@ -10,18 +13,61 @@
 </div>
 
 <div>
-<h3>Dynamic Programming for Solving MDP's</h3>
+<h2>Dynamic Programming for Solving MDP's</h2>
 
-<p>Definition of MDP</p>
+<p>This website serves as an introduction to Markov decision processes and includes interactive demonstrations for a few algorithms used to solve them. </p>
 
-<p>Why dynamic programming</p>
+<h3>What is a Markov decision process?</h3>
 
-<p>Conceptual overview of value iteration and policy iteration</p>
+<p>Suppose we have a graph where traversing each edge gives us some reward (positive or negative), and suppose our goal is to traverse this graph in such a way that the sum of these rewards is maximized over some (possibly infinite) number of moves. Given we are at the vertex <img src="http://latex.codecogs.com/gif.latex?s" border="0"/>, how do we choose which edge, <img src="http://latex.codecogs.com/gif.latex?(s,s')" border="0"/>, to traverse next? If we only cared about reward on our next action, the obvious choice is to just choose the edge with the highest reward. However, since we care about future rewards as well, we have to take into account the rewards we'll have access to once we're at <img src="http://latex.codecogs.com/gif.latex?s'" border="0"/>. Markov decision processes address this problem by assigning each vertex (or "state") a value, given by the recursive definition
 
-<p>Intructions for working with the grid. Users will be able to select a cell and a) set it's reward or b) block it off. I'm also going to add a button that generates a random grid.</p>
+<div lang="latex">
+V^{\pi}(s) = \sum_{s'}P(s, \pi(s), s')(R(s, \pi(s), s') + \gamma V^{\pi}(s'))
+</div>
+
+Where <img src="http://latex.codecogs.com/gif.latex?\pi(s)" border="0"/> is our "policy" for state <img src="http://latex.codecogs.com/gif.latex?s" border="0"/>, and determines the action we will take any time that we end up at this state,
+<img src="http://latex.codecogs.com/gif.latex?P(s, \pi(s), s'))" border="0"/> is the probability that we end up at state <img src="http://latex.codecogs.com/gif.latex?s'" border="0"/> after taking action <img src="http://latex.codecogs.com/gif.latex?\pi(s)" border="0"/>, <img src="http://latex.codecogs.com/gif.latex?R(s, \pi(s), s'))" border="0"/> is the reward we get from transitioning from state <img src="http://latex.codecogs.com/gif.latex?s" border="0"/> to state <img src="http://latex.codecogs.com/gif.latex?s'" border="0"/> taking action <img src="http://latex.codecogs.com/gif.latex?\pi(s)" border="0"/>, and <img src="http://latex.codecogs.com/gif.latex?\gamma" border="0"/> is a discount factor between 0 and 1 that encodes how much we prefer immediate rewards over future rewards.
+</p>
+
+<p>
+The optimal policy for each state is one that transitions to the adjacent state with the highest value, or
+
+<div lang="latex">
+\pi(s) = \text{argmax}_{a} \left\{\sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V^(s')) \right\}
+</div>
+</p>
+
+<p>
+Solving an MDP therefore requires finding the value <img src="http://latex.codecogs.com/gif.latex?V(s)" border="0"/> and policy <img src="http://latex.codecogs.com/gif.latex?\pi(s)" border="0"/> for each state.
+</p>
+
+<h3>Algorithms</h3>
+
+<p>Dynamic programming is a method for solving problems that have the following characteristics:</p>
+
+<p>A) Optimal substructure: The optimal solution can be found by finding the optimal solutions to smaller subproblems</p>
+
+<p>B) Overlapping subproblems: Solutions to subproblems are saved and reused</p>
+
+<p>
+In Markov decision processes, solving for the value of any state requires knowing the values of adjacent states. Once the value of any one state has been determined, it can be used to help solve for the value of any adjacent state. MDP's therefore have both optimal substructure and overlapping subproblems. The two most popular algorithms for solving MDP's, <a href="/value_iteration"> value iteration</a> and <a href="/policy_iteration">policy iteration</a>, are both applications of dynamic programming.
+</p>
+
+<h3>Grid World</h3>
+<p>
+Both algorithms can be demonstrated using a simple 2d environment. This environment makes a few simplifications to the standard MDP. First, we make it so the reward gained from visiting a state depends only on the end state, rather than also depending on the starting state and the action taken. Second, we make the transition function deterministic, so every action has a state such that taking that action will always results in transitioning to that state.
+</p>
+
+<p>
+From each state we can only move left, right, up, down, or stay. Some states (grey) cannot be traversed at all. The discount factor can be modified by entering a new number between 0 and 1 and clicking update discount The reward for any state can be modified by clicking the associated cell, entering a new reward, and clicking update reward. Any blocked state can be made un-blocked and any un-blocked state can be blocked by clicking the associated cell and then clicking toggle blocked. To see how values and policies are updated, go to either the <a href="/value_iteration">value iteration</a> or <a href="/policy_iteration">policy iteration</a> pages.
+
+</p>
+
 
 <div>
-	<input type="number" id='reward' value="0" disabled></input>
+	<input type="number" id='discount' step="0.1" value=".8" min="0" max=".9" style="width: 4em"></input>
+    <button type="button" id="update_discount" onclick="update_reward(selected_row, selected_col)">update discount</button>
+	<input type="number" id='reward' value="0" disabled style="width: 4em"></input>
     <button type="button" id="reward_button" onclick="update_reward(selected_row, selected_col)" disabled>update reward</button>
 	<button type="button" id="blocked_button" onclick="toggle_blocked(selected_row, selected_col)"disabled>toggle blocked</button>
 	<div id='table'>
@@ -46,7 +92,7 @@
 	var selected_row = null
 	var selected_col = null
 
-	onclick="select(event)"
+	var started = false
 	
 
 	$("#table").on('click', 'td', function() {
@@ -88,7 +134,8 @@
 	    		  "blocked_states_list": blocked_states_list,
 	    		  "discount": discount,
 	    		  "values": values,
-	    		  "policy": policy}
+	    		  "policy": policy,
+	    		  "started": started}
 
 		$.ajax({
 	        method:"POST",
@@ -105,6 +152,14 @@
 	            policy = response['policy']
 	        },
 	    });
+	}
+
+
+	function update_discount(selected_row, selected_col){
+
+		var discount = parseInt(document.getElementById('discount').value)
+		state_rewards_list.push([[selected_row-1, selected_col-1], discount])
+		update_table('/update');
 	}
 
 

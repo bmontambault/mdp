@@ -1,6 +1,9 @@
 <html>
 
+<head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+</head>
 
 <div class="nav">
   <a href="/">Home</a>
@@ -9,77 +12,177 @@
 </div>
 
 <div>
-<h3>Policy Iteration</h3>
+<h2>Policy Iteration</h2>
 
-<p>Policy Iteration Algorithm</p>
+<p>Policy iteration involves alternating between two steps, policy evaluation and policy improvement, until the optimal policy converges. First we initialize a random policy for each state (left, right, up, down, stay). We then find the value function for each state following this policy by iteration until convergence:</p>
+<div lang="latex">
+V_{i+1}^{\pi}(s) = \sum_{s'}P(s, \pi(s), s')(R(s, \pi(s), s') + \gamma V_{i}^{\pi}(s'))
+</div>
 
+Once the value function has converged, we update the optimal policy:
+<div lang="latex">
+\pi(s) = \text{argmax}_{a} \left\{\sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V^(s')) \right\}</div>
+</div>
+
+<p>
+If the policy doesn't change, the algorithm has finished. If the policy does change, we go back to step one to find the new value function for the new policy.
+<p>
+
+<p>
+In the environment below, click policy evaluation to perform one step of policy evaluation. You will find that at some point the values represented in each cell will stop changing, indicating that the value function has converged for the current policy. Click policy improvement to update the policy given the current value function. Alternating between these steps, you will find that eventually clicking policy improvement will not cause the policy for any of the states to change, indicating that the algorithm has converged.
+
+
+</p>
 
 </div>
 
 <div>
-	<p><span style="color:red">(I haven't implemented policy iteration yet)</span></p>
-	<button type="button" onclick="next_iteration('table3')">policy evaluation</button>
-	<button type="button" onclick="next_iteration('table3')">policy update</button>
-	<button type="button" onclick="show_policy('table3')">show policy</button>
-	<div id='table3'>
+	<input type="number" id='discount' step="0.1" value=".8" min="0" max=".99" style="width: 4em"></input>
+    <button type="button" id="update_discount" onclick="update_reward(selected_row, selected_col)">update discount</button>
+	<input type="number" id='reward' value="0" style="width: 4em" disabled></input>
+    <button type="button" id="reward_button" onclick="update_reward(selected_row, selected_col)" disabled>update reward</button>
+	<button type="button" id="blocked_button" onclick="toggle_blocked(selected_row, selected_col)"disabled>toggle blocked</button>
+	<div id='table'>
 		{{table|safe}}
 	</div>
+	<button type="button" onclick="policy_evaluation_step()">policy evaluation</button>
+	<button type="button" onclick="policy_improvement()">policy improvement</button>
+	<button type="button" onclick="reset()">reset</button>
 </div>
 
-<!-- <script type="text/javascript" src="{{ url_for('static', filename='generate_grid.js') }}"></script> -->
 <script type="text/javascript">
 
 	var size = {{size}}
+	var state_rewards_list = {{state_rewards_list}}
+    var blocked_states_list = {{blocked_states_list}}
+    var discount = {{discount}}
+    var values = {{values}}
+    var policy = {{policy}}
 
-	function next_iteration(table_id){
+    var original_color = null
+	var selected_row = null
+	var selected_col = null
+
+	var started = false
+	
+
+	$("#table").on('click', 'td', function() {
+
+		document.getElementById("reward").disabled = false;
+		document.getElementById("reward_button").disabled = false;
+		document.getElementById("blocked_button").disabled = false;
+
+	    var index = $( "td" ).index( this );
+	    selected_row = Math.floor( ( index ) / size) + 1;
+	    selected_col = ( index % size ) + 1;
+
+	    //save original class
+	    var cell_class = $(this).attr("class");
+
+	    //deselect other cells
+	    var selected = document.getElementsByClassName('selected')
+	    if (selected.length > 0){
+	    	cell = selected[0]
+	    	cell.classList.remove("selected")
+	    	cell.style.background = original_color
+	    }
+
+	    //if it wasn't selected originally, select cell
+	    if (typeof cell_class !== 'selected'){
+	    	$(this).addClass('selected')
+	    	original_color = $(this).css('background-color')
+	    	$( this ).css( 'background-color', 'yellow' );
+	    }
+
+	});
+
+
+	function update_discount(selected_row, selected_col){
+
+		var discount = parseInt(document.getElementById('discount').value)
+		state_rewards_list.push([[selected_row-1, selected_col-1], discount])
+		update_table('/update');
+	}
+
+
+	function update_reward(selected_row, selected_col){
+
+		var reward = parseInt(document.getElementById('reward').value)
+		state_rewards_list.push([[selected_row-1, selected_col-1], reward])
+		update_table('/update');
+	}
+
+
+	function is_blocked(cell){
+
+		var idx = -1
+		for (var i=0; i<blocked_states_list.length; i++){
+			if (cell[0] == blocked_states_list[i][0] & cell[1] == blocked_states_list[i][1]){
+				idx = i
+			}
+		}
+		return idx
+	}
+
+	function toggle_blocked(selected_row, selected_col){
+
+		var cell = [selected_row-1, selected_col-1]
+		idx = is_blocked(cell)
+
+		if (idx == -1){
+			blocked_states_list.push(cell)
+		} else {
+			blocked_states_list.splice(idx, 1)
+		}
+		update_table('/update');
+	}
+
+	function update_table(url){
+
+		data = {"size": size,
+	    		  "state_rewards_list": state_rewards_list,
+	    		  "blocked_states_list": blocked_states_list,
+	    		  "discount": discount,
+	    		  "values": values,
+	    		  "policy": policy,
+	    		  "started": started}
 
 		$.ajax({
-	        method:"GET",
-	        url:"/iterate",
-	        data:{"table_id": table_id},
+	        method:"POST",
+	        contentType: 'application/json',
+	        url: url,
+	        data:JSON.stringify(data),
+	    	dataType: 'json',
+          	contentType: 'application/json; charset=utf-8',
 	        success:function(resp, data){
-	            var response = JSON.parse(resp);
+	            var response = resp;
 	            var table = response['table']
-	            document.getElementById(table_id).innerHTML = table
+	            document.getElementById("table").innerHTML = table
+	            values = response['values']
+	            policy = response['policy']
 	        },
 	    });
 	}
 
 
-	function show_policy(table_id){
+	function policy_evaluation_step(){
 
-		$.ajax({
-	        method:"GET",
-	        url:"/policy",
-	        data:{"table_id": table_id},
-	        success:function(resp, data){
-	            var response = JSON.parse(resp);
-	            var table = response['table']
-	            document.getElementById(table_id).innerHTML = table
-	        },
-	    });
+		update_table("/policy_evaluation_step")
+		started = true
 	}
 
 
-	$("td").click(function() {
-	    var index = $( "td" ).index( this );
-	    var row = Math.floor( ( index ) / size) + 1;
-	    var col = ( index % size ) + 1;
-	    $( this ).css( 'background-color', 'yellow' );
-	});
+	function policy_improvement(){
+
+		update_table("/policy_improvement")
+	}
 
 
-	/*
-	$("#tableContainer").append(generateGrid(size, size, colors));
+	function reset(){
 
-	$("td").click(function() {
-	    var index = $( "td" ).index( this );
-	    var row = Math.floor( ( index ) / size) + 1;
-	    var col = ( index % size ) + 1;
-	    $( "span" ).text( "That was row " + row + " and col " + col );
-	    $( this ).css( 'background-color', 'red' );
-	});
-	*/
+		started = false
+		update_table("/update")
+	}
 
 
 </script>

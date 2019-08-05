@@ -1,6 +1,9 @@
 <html>
 
+<head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+</head>
 
 <div class="nav">
   <a href="/">Home</a>
@@ -9,20 +12,39 @@
 </div>
 
 <div>
-<h3>Value Iteration</h3>
+<h2>Value Iteration</h2>
 
-<p>Value Iteration Algorithm</p>
+<p>Value iteration involves two broad steps: First, we iteratively update the value of each state by solving</p>
+<div lang="latex">
+V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
+</div>
+
+<p> where <img src="http://latex.codecogs.com/gif.latex?V_{i}(s')" border="0"/> was the value for <img src="http://latex.codecogs.com/gif.latex?s'" border="0"/> computed on the previous iteration. Once this has converged for all states, meaning that <img src="http://latex.codecogs.com/gif.latex?|V_{i+1}(s) - V_{i}(s)|" border="0"/> is less than some small number, we find the optimal policy </p>
+
+<div lang="latex">
+\pi(s) = \text{argmax}_{a} \left\{\sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V^(s')) \right\}
+</div>
+
+
+<p>
+In the environment below, click value iteration to perform one step of value iteration. You will find that at some point the values represented in each cell will stop changing, indicating that the value function has converged. At any point, click show policy to reveal the optimal policy at each state.
+</p>
 
 
 </div>
 
 <div>
-	<p><span style="color:red">(The buttons do things just not the correct things yet)</span></p>
-	<button type="button" onclick="step('table')">value iteration</button>
-	<button type="button" onclick="show_policy('table')">show policy</button>
+	<input type="number" id='discount' step="0.1" value=".8" min="0" max=".99" style="width: 4em"></input>
+    <button type="button" id="update_discount" onclick="update_reward(selected_row, selected_col)">update discount</button>
+	<input type="number" id='reward' value="0" disabled></input>
+    <button type="button" id="reward_button" onclick="update_reward(selected_row, selected_col)" disabled>update reward</button>
+	<button type="button" id="blocked_button" onclick="toggle_blocked(selected_row, selected_col)"disabled>toggle blocked</button>
 	<div id='table'>
 		{{table|safe}}
 	</div>
+	<button type="button" onclick="step()">value iteration</button>
+	<button type="button" onclick="show_policy()">show policy</button>
+	<button type="button" onclick="reset()">reset</button>
 </div>
 
 <script type="text/javascript">
@@ -34,14 +56,93 @@
     var values = {{values}}
     var policy = {{policy}}
 
-	function update_table(table_id, url){
+    var original_color = null
+	var selected_row = null
+	var selected_col = null
+
+	var started = false
+	
+
+	$("#table").on('click', 'td', function() {
+
+		document.getElementById("reward").disabled = false;
+		document.getElementById("reward_button").disabled = false;
+		document.getElementById("blocked_button").disabled = false;
+
+	    var index = $( "td" ).index( this );
+	    selected_row = Math.floor( ( index ) / size) + 1;
+	    selected_col = ( index % size ) + 1;
+
+	    //save original class
+	    var cell_class = $(this).attr("class");
+
+	    //deselect other cells
+	    var selected = document.getElementsByClassName('selected')
+	    if (selected.length > 0){
+	    	cell = selected[0]
+	    	cell.classList.remove("selected")
+	    	cell.style.background = original_color
+	    }
+
+	    //if it wasn't selected originally, select cell
+	    if (typeof cell_class !== 'selected'){
+	    	$(this).addClass('selected')
+	    	original_color = $(this).css('background-color')
+	    	$( this ).css( 'background-color', 'yellow' );
+	    }
+
+	});
+
+
+	function update_discount(selected_row, selected_col){
+
+		var discount = parseInt(document.getElementById('discount').value)
+		state_rewards_list.push([[selected_row-1, selected_col-1], discount])
+		update_table('/update');
+	}
+
+
+	function update_reward(selected_row, selected_col){
+
+		var reward = parseInt(document.getElementById('reward').value)
+		state_rewards_list.push([[selected_row-1, selected_col-1], reward])
+		update_table('/update');
+	}
+
+
+	function is_blocked(cell){
+
+		var idx = -1
+		for (var i=0; i<blocked_states_list.length; i++){
+			if (cell[0] == blocked_states_list[i][0] & cell[1] == blocked_states_list[i][1]){
+				idx = i
+			}
+		}
+		return idx
+	}
+
+	function toggle_blocked(selected_row, selected_col){
+
+		var cell = [selected_row-1, selected_col-1]
+		idx = is_blocked(cell)
+
+		if (idx == -1){
+			blocked_states_list.push(cell)
+		} else {
+			blocked_states_list.splice(idx, 1)
+		}
+		update_table('/update');
+	}
+
+	function update_table(url){
 
 		data = {"size": size,
 	    		  "state_rewards_list": state_rewards_list,
 	    		  "blocked_states_list": blocked_states_list,
 	    		  "discount": discount,
 	    		  "values": values,
-	    		  "policy": policy}
+	    		  "policy": policy,
+	    		  "started": started}
 
 		$.ajax({
 	        method:"POST",
@@ -53,7 +154,7 @@
 	        success:function(resp, data){
 	            var response = resp;
 	            var table = response['table']
-	            document.getElementById(table_id).innerHTML = table
+	            document.getElementById("table").innerHTML = table
 	            values = response['values']
 	            policy = response['policy']
 	        },
@@ -61,37 +162,24 @@
 	}
 
 
-	function step(table_id){
+	function step(){
 
-		update_table(table_id, "/value_iteration_step")
+		update_table("/value_iteration_step")
+		started = true
 	}
 
 
-	function show_policy(table_id){
+	function show_policy(){
 
-		update_table(table_id, "/value_iteration_show_policy")
+		update_table("/value_iteration_show_policy")
 	}
 
 
-	$("td").click(function() {
-	    var index = $( "td" ).index( this );
-	    var row = Math.floor( ( index ) / size) + 1;
-	    var col = ( index % size ) + 1;
-	    $( this ).css( 'background-color', 'yellow' );
-	});
+	function reset(){
 
-
-	/*
-	$("#tableContainer").append(generateGrid(size, size, colors));
-
-	$("td").click(function() {
-	    var index = $( "td" ).index( this );
-	    var row = Math.floor( ( index ) / size) + 1;
-	    var col = ( index % size ) + 1;
-	    $( "span" ).text( "That was row " + row + " and col " + col );
-	    $( this ).css( 'background-color', 'red' );
-	});
-	*/
+		started = false
+		update_table("/update")
+	}
 
 
 </script>
