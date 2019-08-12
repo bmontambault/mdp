@@ -47,7 +47,7 @@ class MDP:
             )
         
         if values is None:
-            self.values = self.rewards[0,0]
+            self.values = np.zeros(shape=self.states.shape[0])
         else:
             self.values = values
         if policy is None:
@@ -134,7 +134,8 @@ class MDP:
                 states[None,:,None,:] == states_new[:,None]
                 ).all(axis=3).transpose(0,2,1).astype(int)
         
-        return transitions * blocked_states[None,None,:]
+        transitions = transitions * blocked_states[None,None,:]
+        return transitions
     
     
     """
@@ -201,6 +202,14 @@ class MDP:
         
         expanded_values = self.expand_array_(self.actions, self.values)
         return (self.transitions*(self.rewards + self.discount*expanded_values)
+                ).sum(axis=2).argmax(axis=1)
+        
+        
+    def optimize_policy2(self):
+        
+        expanded_values = self.expand_array_(self.actions, self.values)
+        transitions = np.nan_to_num(self.transitions / self.transitions.sum(axis=1)[:,None,:])
+        return (transitions*(self.rewards + self.discount*expanded_values)
                 ).sum(axis=2).argmax(axis=1)
         
         
@@ -292,12 +301,20 @@ class MDP:
             i+=1
             
             
-    def get_grid_values(self):
+    def get_total_rewards(self):
         
+        expanded_values = self.expand_array_(self.actions, self.values)
+        total_rewards = self.rewards + expanded_values
+        return total_rewards[0,0]
+        
+            
+    def get_grid_total_rewards(self):
+        
+        total_rewards = self.get_total_rewards()
         grid_values = np.zeros(shape=(self.size, self.size))
-        for i in range(len(self.values)):
+        for i in range(len(total_rewards)):
             x,y = self.states[i]
-            grid_values[x][y] = self.values[i]
+            grid_values[x][y] = total_rewards[i]
         return grid_values
         
         
@@ -312,18 +329,15 @@ class MDP:
     
     def plot_grid_values(self):
         
-        grid = self.get_grid_values()
+        grid = self.get_grid_total_rewards()
         sns.heatmap(np.round(grid,2), annot=True, cbar=False)
 
-      
-#mdp = MDP({(6,6):1, (0,0):1}, [(2,2), (2,3), (1,3), (0,3), (2,1), (2,0)], discount=.8)
-#mdp.policy_iteration()
-
-#values = mdp.policy_evaluation()
-
-#mdp.value_iteration()
-#mdp.plot_grid_values()
-
-#mdp.value_iteration_step()
-#mdp.value_iteration_step()
-#mdp.value_iteration_step()
+"""
+size = 5
+state_rewards_dict = {(3,3):1, (0,0):2}
+blocked_states_list = [(2,3), (2,4), (2,2)]
+discount=.9
+mdp = MDP(state_rewards_dict, blocked_states_list,
+                 discount, size=size)
+mdp.value_iteration()
+"""

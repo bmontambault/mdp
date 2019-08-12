@@ -33,16 +33,17 @@ class ColorMap:
 
     
     
-def make_grid_world(values, policy, blocked_states_list,
-                    min_reward, max_reward,
+def make_grid_world(total_rewards, policy, blocked_states_list,
                     show_policy=False, n=100):
     
     
+    min_reward = total_rewards.min()
+    max_reward = total_rewards.max()
     color_map = ColorMap(min_reward, max_reward, n)
-    colors = [color_map.get_color(value) for value in values]    
-    rounded_values = np.round(values,2)
+    colors = [color_map.get_color(r) for r in total_rewards]    
+    rounded_total_rewards = np.round(total_rewards,2)
             
-    size = int(np.sqrt(len(values)))
+    size = int(np.sqrt(len(total_rewards)))
     grid = "<table>"
     grid_num = 0
     for i in range(size):
@@ -55,7 +56,7 @@ def make_grid_world(values, policy, blocked_states_list,
                 val = ['&larr;', '&rarr;', '&uarr;', '&darr;', 'X'][policy[grid_num]]
                 color = colors[grid_num]
             else:
-                val = rounded_values[grid_num]
+                val = rounded_total_rewards[grid_num]
                 color = colors[grid_num]
             grid += f"<td align='center' id='{i}{j}' style='background-color:{color}'>{val}</td>"
             grid_num += 1
