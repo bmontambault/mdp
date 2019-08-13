@@ -135,9 +135,9 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 		document.getElementById("reward_button").disabled = false;
 		document.getElementById("blocked_button").disabled = false;
 
-	    var index = $( "td" ).index( this );
-	    selected_row = Math.floor( ( index ) / size) + 1;
-	    selected_col = ( index % size ) + 1;
+	    var id = $(this).attr("id");
+	    selected_row = parseInt(id[0])
+	    selected_col = parseInt(id[1])
 
 	    //save original class
 	    var cell_class = $(this).attr("class");
@@ -163,7 +163,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 	function update_discount(selected_row, selected_col){
 
 		var discount = parseInt(document.getElementById('discount').value)
-		state_rewards_list.push([[selected_row-1, selected_col-1], discount])
+		state_rewards_list.push([[selected_row, selected_col], discount])
 		update_table('/update');
 	}
 
@@ -171,7 +171,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 	function update_reward(selected_row, selected_col){
 
 		var reward = parseInt(document.getElementById('reward').value)
-		state_rewards_list.push([[selected_row-1, selected_col-1], reward])
+		state_rewards_list.push([[selected_row, selected_col], reward])
 		update_table('/update');
 	}
 
@@ -189,7 +189,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 
 	function toggle_blocked(selected_row, selected_col){
 
-		var cell = [selected_row-1, selected_col-1]
+		var cell = [selected_row, selected_col]
 		idx = is_blocked(cell)
 
 		if (idx == -1){

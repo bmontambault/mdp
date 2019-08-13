@@ -36,56 +36,6 @@ def get_mdp(request):
                      discount, size, values, policy)
     return mdp
 
-
-
-
-@app.route('/value_iteration_example', methods=['GET', 'POST'])
-def value_iteration_example():
-    
-    
-    size = 5
-    state_rewards_dict = {(3,3):1, (0,0):2}
-    blocked_states_list = [(2,3), (2,4), (2,2)]
-    discount=.9
-    mdp = MDP(state_rewards_dict, blocked_states_list,
-                     discount, size=size)
-        
-    table1 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
-    
-    mdp.values = mdp.evaluate_values()
-    table2 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
-    
-    mdp.values = mdp.evaluate_values()
-    table3 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
-    
-    
-    mdp.values = mdp.evaluate_values()
-    table4 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
-    
-    
-    mdp.value_iteration()
-    table5 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
-    value_table6 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
-    policy_table6 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list,
-                                    show_policy=True)
-    
-    state_rewards_list = [[list(k),v] for k,v in state_rewards_dict.items()]
-    return render_template("value_iteration_example.html",
-                table1=table1,
-                table2=table2,
-                table3=table3,
-                table4=table4,
-                table5=table5,
-                value_table6=value_table6,
-                policy_table6=policy_table6,
-                size=size,
-                state_rewards_list=state_rewards_list,
-                blocked_states_list=[list(s) for s in blocked_states_list],
-                discount=discount,
-                values=mdp.values.tolist(),
-                policy=mdp.policy.tolist())
-    
-    
     
 @app.route('/policy_iteration_example', methods=['GET', 'POST'])
 def policy_iteration_example():
@@ -101,29 +51,33 @@ def policy_iteration_example():
     mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size=size, policy=policy)        
 
-    value_table1 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
-    policy_table1 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+    value_table1 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
+    policy_table1 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list, show_policy=True)
+    
+    mdp.values = mdp.evaluate_policy_values()
+    intermediate_table = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     mdp.policy_evaluation()
-    value_table2 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    value_table2 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     mdp.policy_improvement()
-    policy_table2 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+    policy_table2 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list, show_policy=True)
     
     mdp.policy_evaluation()
-    value_table3 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    value_table3 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     mdp.policy_improvement()
-    policy_table3 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+    policy_table3 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list, show_policy=True)
     
     mdp.policy_iteration()
-    value_table4 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
-    policy_table4 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+    value_table4 = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    policy_table4 = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
     
     state_rewards_list = [[list(k),v] for k,v in state_rewards_dict.items()]
     return render_template("policy_iteration_example.html",
                 value_table1=value_table1,
                 policy_table1=policy_table1,
+                intermediate_table=intermediate_table,
                 value_table2=value_table2,
                 policy_table2=policy_table2,
                 value_table3=value_table3,
@@ -138,9 +92,6 @@ def policy_iteration_example():
                 policy=mdp.policy.tolist())
 
 
-    
-    
-    
 @app.route('/', methods=['GET', 'POST'])
 def index():
     
@@ -153,7 +104,7 @@ def index():
     mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size=size)
         
-    table = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
     state_rewards_list = [[list(k),v] for k,v in state_rewards_dict.items()]
     return render_template("index.html",
                 table=table,
@@ -180,17 +131,15 @@ def update():
     values = np.array(data['values'])
     policy = np.array(data['policy'])
     
+    print(blocked_states_list)
     if started:
         mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size, values, policy)
     else:
         mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size)
-    
-    min_reward = mdp.values.min()
-    max_reward = mdp.values.max()
-    table = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list,
-                            min_reward, max_reward)
+    table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy,
+                            mdp.blocked_states_list)
     
     return json.dumps({'table': table, 'values': mdp.values.tolist(),
             'policy': mdp.policy.tolist()})
@@ -207,23 +156,23 @@ def value_iteration():
     mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size=size)
         
-    table1 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
+    table1 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     mdp.values = mdp.evaluate_values()
-    table2 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
+    table2 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     mdp.values = mdp.evaluate_values()
-    table3 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
+    table3 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     
     mdp.values = mdp.evaluate_values()
-    table4 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
+    table4 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     
     mdp.value_iteration()
-    table5 = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list)
-    value_table6 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
-    policy_table6 = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list,
+    table5 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
+    value_table6 = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    policy_table6 = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list,
                                     show_policy=True)
             
     size = 10
@@ -234,7 +183,7 @@ def value_iteration():
     mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size=size)
     
-    table = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
     state_rewards_list = [[list(k),v] for k,v in state_rewards_dict.items()]
     return render_template("value_iteration.html",
                 table1=table1,
@@ -272,7 +221,7 @@ def value_iteration_step():
     mdp.values = mdp.evaluate_values()
     mdp.policy = mdp.optimize_policy()
     
-    table = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
     
     return json.dumps({'table': table, 'values': mdp.values.tolist(),
             'policy': mdp.policy.tolist()})
@@ -295,7 +244,7 @@ def value_iteration_show_policy():
     mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size, values, policy)
     
-    table = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+    table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
     return json.dumps({'table': table, 'values': mdp.values.tolist(),
             'policy': mdp.policy.tolist()})
 
@@ -303,6 +252,38 @@ def value_iteration_show_policy():
     
 @app.route('/policy_iteration', methods=['GET','POST'])
 def policy_iteration():
+    
+    size = 5
+    state_rewards_dict = {(3,3):1, (0,0):1}
+    blocked_states_list = [(2,3), (2,4), (2,2)]
+    discount=.9
+    
+    np.random.seed(443209)
+    policy = np.random.randint(0,4, size=size**2)
+    mdp = MDP(state_rewards_dict, blocked_states_list,
+                     discount, size=size, policy=policy)        
+
+    value_table1 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
+    policy_table1 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list, show_policy=True)
+    
+    mdp.values = mdp.evaluate_policy_values()
+    intermediate_table = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
+    
+    mdp.policy_evaluation()
+    value_table2 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
+    
+    mdp.policy_improvement()
+    policy_table2 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list, show_policy=True)
+    
+    mdp.policy_evaluation()
+    value_table3 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
+    
+    mdp.policy_improvement()
+    policy_table3 = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list, show_policy=True)
+    
+    mdp.policy_iteration()
+    value_table4 = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list)
+    policy_table4 = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
         
     size = 10
     state_rewards_dict = {(6,6):1, (0,0):1}
@@ -312,9 +293,18 @@ def policy_iteration():
     mdp = MDP(state_rewards_dict, blocked_states_list,
                      discount, size=size)
     
-    table = make_grid_world(mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+    table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
     state_rewards_list = [[list(k),v] for k,v in state_rewards_dict.items()]
     return render_template("policy_iteration.html",
+                value_table1=value_table1,
+                policy_table1=policy_table1,
+                intermediate_table=intermediate_table,
+                value_table2=value_table2,
+                policy_table2=policy_table2,
+                value_table3=value_table3,
+                policy_table3=policy_table3,
+                value_table4=value_table4,
+                policy_table4=policy_table4,
                 table=table,
                 size=size,
                 state_rewards_list=state_rewards_list,
@@ -342,10 +332,7 @@ def policy_iteration_step():
                      discount, size, values, policy)
     mdp.values = mdp.evaluate_policy_values()
     
-    min_reward = mdp.values.min()
-    max_reward = mdp.values.max()
-    table = make_grid_world(mdp.get_, mdp.policy, mdp.blocked_states_list,
-                            min_reward, max_reward)
+    table = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list)
     
     return json.dumps({'table': table, 'values': mdp.values.tolist(),
             'policy': mdp.policy.tolist()})
@@ -368,10 +355,8 @@ def policy_improvement():
                      discount, size, values, policy)
     stable = mdp.policy_improvement()
     
-    min_reward = mdp.values.min()
-    max_reward = mdp.values.max()
-    table = make_grid_world(mdp.values, mdp.policy, mdp.blocked_states_list,
-                            min_reward, max_reward, show_policy=True)
+    table = make_grid_world(mdp.states, mdp.values, mdp.policy, mdp.blocked_states_list,
+                            show_policy=True)
     
     return json.dumps({'table': table, 'values': mdp.values.tolist(),
             'policy': mdp.policy.tolist()})

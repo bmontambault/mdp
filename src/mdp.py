@@ -332,11 +332,16 @@ class MDP:
         grid = self.get_grid_total_rewards()
         sns.heatmap(np.round(grid,2), annot=True, cbar=False)
 
-
-size = 5
+"""
+size = 2
 state_rewards_dict = {(3,3):1, (0,0):2}
-blocked_states_list = [(2,3), (2,4), (2,2)]
+blocked_states_list = []#[(2,3), (2,4), (2,2)]
 discount=.9
 mdp = MDP(state_rewards_dict, blocked_states_list,
                  discount, size=size)
+
+#mdp.policy_evaluation()
+#mdp.policy_improvement()
 mdp.value_iteration()
+table = make_grid_world(mdp.states, mdp.get_total_rewards(), mdp.policy, mdp.blocked_states_list, show_policy=True)
+"""

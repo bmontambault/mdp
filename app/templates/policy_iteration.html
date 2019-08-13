@@ -26,14 +26,73 @@ Once the value function has converged, we update the optimal policy:
 
 <p>
 If the policy doesn't change, the algorithm has finished. If the policy does change, we go back to step one to find the new value function for the new policy.
-<p>
-
-<p>
-In the environment below, click policy evaluation to perform one step of policy evaluation. You will find that at some point the values represented in each cell will stop changing, indicating that the value function has converged for the current policy. Click policy improvement to update the policy given the current value function. Alternating between these steps, you will find that eventually clicking policy improvement will not cause the policy for any of the states to change, indicating that the algorithm has converged.
-
-
 </p>
 
+</div>
+
+<div>
+
+	<p>
+	In policy iteration we alternate between evaluating the value function given a fixed policy and updating the policy given the value function. 
+	</p>
+
+	<p>
+	As an example we look at an environment where we recieve a reward of 1 in the states (0,0) and (3,3), and no reward in any other states. The states (2,2), (2,3), and (2,4) are blocked off and cannot be traversed.
+	We initialize the value function to be 0 at each state (left), and initialize the policy to be random (right).
+	</p>
+
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table1|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table1|safe}} </div>
+	</div>
+
+	<p>
+	In the first round of policy evaluation step we find the optimal value for each state given the initial policy <img src="http://latex.codecogs.com/gif.latex?\pi^{0}" border="0"/>
+	For the first iteration of the policy evaluation step we compute <img src="http://latex.codecogs.com/gif.latex?V_{1}^{\pi^{0}}(s)" border="0"/> as follows:
+	<div lang="latex">
+	V_{1}^{\pi}^{0}(s) = \sum_{s'}P(s, \pi^{0}(s), s')(R(s, \pi^{0}(s), s') + \gamma V_{0}^{\pi}^{0}(s'))
+	</div>
+	Since <img src="http://latex.codecogs.com/gif.latex?V_{0}^{\pi^{0}}(s)" border="0"/> was initialized to as 0 for each state, <img src="http://latex.codecogs.com/gif.latex?V_{1}^{\pi^{0}}(s)" border="0"/>
+	will be only the immediate reward gained if we follow the policy <img src="http://latex.codecogs.com/gif.latex?\pi^{0}(s)" border="0"/> at each state. For the state (0,0), our policy is to move to the left. Since we are already at the edge of the grid we will stay in the same state and gain a reward of 1. The policy at (3,4) is to go up which where we gain the reward of 1 from (3,3), so the new value at (3,4) is 1. For all other states, the initial policy does not bring us to a stay where we gain any reward, so their values stay at 0.
+	</p>
+
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{intermediate_table|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table1|safe}} </div>
+	</div>	
+
+
+	<p>
+	We repeat this step for <img src="http://latex.codecogs.com/gif.latex?V_{i+1}^{\pi^{0}}(s)" border="0"/> until the value function converges, meaning that <img src="http://latex.codecogs.com/gif.latex?|V_{i+1}(s) - V_{i}(s)|" border="0"/> is less than some small number for all states (see the example under value iteration for more details). Since we can reach (3,3) from (3,3), (3,4), (4,3) and (4,4) using the policy <img src="http://latex.codecogs.com/gif.latex?\pi^{0}" border="0"/> (try tracing a path using only the moves specified by the policy), each of these states will converge on values greater than 0. For the remainder of the states besides (0,0), we still cannot reach a state with a reward given our current policy so the values at these states remain 0. Next we update the policy by taking the best action at each state given our new value function (right). We can see that the policy at (0,0) has not changed, since continually moving left against the edge still gives us the maximum score. For the states adjacent to either (0,0) or (3,3), the optimal policy is to move in whatever direction that brings us to that state. 
+	</p>
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table2|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table2|safe}} </div>
+	</div>
+
+	<p>
+	This process is repeated for <img src="http://latex.codecogs.com/gif.latex?\pi^{1}" border="0"/>: We again update the value function until convergence (left) and optimize the policy (right).
+	</p>
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table3|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table3|safe}} </div>
+	</div>
+
+
+	<p>
+	We repeat these two steps until <img src="http://latex.codecogs.com/gif.latex?\pi^{i+1}=\pi^{i}" border="0"/>, at which point we know the expected reward at each state (left) our policy has converged (right).
+	</p>
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table4|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table4|safe}} </div>
+	</div>
+
+</div>
+
+<div>
+<p>
+In the environment below, click policy evaluation to perform one step of policy evaluation. You will find that at some point the values represented in each cell will stop changing, indicating that the value function has converged for the current policy. Click policy improvement to update the policy given the current value function. Alternating between these steps, you will find that eventually clicking policy improvement will not cause the policy for any of the states to change, indicating that the algorithm has converged.
+</p>
 </div>
 
 <div>
@@ -72,9 +131,9 @@ In the environment below, click policy evaluation to perform one step of policy 
 		document.getElementById("reward_button").disabled = false;
 		document.getElementById("blocked_button").disabled = false;
 
-	    var index = $( "td" ).index( this );
-	    selected_row = Math.floor( ( index ) / size) + 1;
-	    selected_col = ( index % size ) + 1;
+	    var id = $(this).attr("id");
+	    selected_row = parseInt(id[0])
+	    selected_col = parseInt(id[1])
 
 	    //save original class
 	    var cell_class = $(this).attr("class");
@@ -100,7 +159,7 @@ In the environment below, click policy evaluation to perform one step of policy 
 	function update_discount(selected_row, selected_col){
 
 		var discount = parseInt(document.getElementById('discount').value)
-		state_rewards_list.push([[selected_row-1, selected_col-1], discount])
+		state_rewards_list.push([[selected_row, selected_col], discount])
 		update_table('/update');
 	}
 
@@ -108,7 +167,7 @@ In the environment below, click policy evaluation to perform one step of policy 
 	function update_reward(selected_row, selected_col){
 
 		var reward = parseInt(document.getElementById('reward').value)
-		state_rewards_list.push([[selected_row-1, selected_col-1], reward])
+		state_rewards_list.push([[selected_row, selected_col], reward])
 		update_table('/update');
 	}
 
@@ -126,7 +185,7 @@ In the environment below, click policy evaluation to perform one step of policy 
 
 	function toggle_blocked(selected_row, selected_col){
 
-		var cell = [selected_row-1, selected_col-1]
+		var cell = [selected_row, selected_col]
 		idx = is_blocked(cell)
 
 		if (idx == -1){
