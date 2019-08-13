@@ -35,7 +35,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 	</p>
 
 	<p>
-	As an example we look at an environment where we recieve a reward of 1 in the states (0,0) and (3,3), and no reward in any other states. The states (2,2), (2,3), and (2,4) are blocked off and cannot be traversed.
+	As an example we look at an environment where we recieve a reward of 1 in the states (0,0) and (3,3), and no reward in any other states. The states (2,2), (2,3), and (2,4) are blocked off and cannot be traversed. We initialize the value function to be 0 for every state.
 	</p>
 	<div id='table1'>
 		{{table1|safe}}
@@ -99,7 +99,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 	<p>
 	In the environment below, click value iteration to perform one step of value iteration. You will find that at some point the values represented in each cell will stop changing, indicating that the value function has converged. At any point, click show policy to reveal the optimal policy at each state.
 	</p>
-	
+
 	<input type="number" id='discount' step="0.1" value=".8" min="0" max=".99" style="width: 4em"></input>
     <button type="button" id="update_discount" onclick="update_reward(selected_row, selected_col)">update discount</button>
 	<input type="number" id='reward' value="0" disabled></input>

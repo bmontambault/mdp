@@ -1,0 +1,65 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+</head>
+
+<body>
+
+<div>
+
+	<p>
+	In policy iteration we alternate between evaluating the value function given a fixed policy and updating the policy given the value function. 
+	</p>
+
+	<p>
+	As an example we look at an environment where we recieve a reward of 1 in the states (0,0) and (3,3), and no reward in any other states. The states (2,2), (2,3), and (2,4) are blocked off and cannot be traversed.
+	We initialize the value function to be 0 at each state (right), and initialize the policy to be random (left).
+	</p>
+
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table1|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table1|safe}} </div>
+	</div>
+
+	<p>
+	In the first iteration we find the optimal value for each state given the initial policy <img src="http://latex.codecogs.com/gif.latex?\pi^{0}" border="0"/>
+	<div lang="latex">
+	V_{1}^{\pi}^{0}(s) = \sum_{s'}P(s, \pi^{0}(s), s')(R(s, \pi^{0}(s), s') + \gamma V_{0}^{\pi}^{0}(s'))
+	</div>
+	
+	</p>
+
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table2|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table2|safe}} </div>
+	</div>
+
+	fdafdasfdaf
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table3|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table3|safe}} </div>
+	</div>
+
+	fdafdasfdaf
+	<div style="width: 100%; overflow: hidden;">
+	    <div style="width: 600px; float: left;"> {{value_table4|safe}} </div>
+	    <div style="margin-left: 620px;"> {{policy_table4|safe}} </div>
+	</div>
+
+</div>
+
+</body>
+
+
+<style type="text/css">
+	
+	td {
+	    border: 1px solid;
+	    width: 50px;
+	    height: 50px;
+	}
+
+</style>
+
+</html>

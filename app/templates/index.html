@@ -45,9 +45,15 @@ Solving an MDP therefore requires finding the value <img src="http://latex.codec
 
 <p>Dynamic programming is a method for solving problems that have the following characteristics:</p>
 
-<p>A) Optimal substructure: The optimal solution can be found by finding the optimal solutions to smaller subproblems</p>
+<p>A) Optimal substructure: The optimal solution can be found by finding the optimal solutions to smaller subproblems.</p>
 
-<p>B) Overlapping subproblems: Solutions to subproblems are saved and reused</p>
+<p>The recursive definition of the value function gives a state's value as the sum of the value and reward at all other states, times the probability of reaching that state from the current state. Therefore, if we've solved for the value function of all states adjacent to <img src="http://latex.codecogs.com/gif.latex?s" border="0"/>, solving for <img src="http://latex.codecogs.com/gif.latex?V(s)" border="0"/> only requires combining these with our known reward and transition functions. </p>
+
+<p>B) Overlapping subproblems: Solutions to subproblems are saved and reused.</p>
+
+<p>
+Once we have calculated the value function at a state, that value can be reused to solve for the value function at all adjacent states.
+</p>
 
 <p>
 In Markov decision processes, solving for the value of any state requires knowing the values of adjacent states. Once the value of any one state has been determined, it can be used to help solve for the value of any adjacent state. MDP's therefore have both optimal substructure and overlapping subproblems. The two most popular algorithms for solving MDP's, <a href="/value_iteration"> value iteration</a> and <a href="/policy_iteration">policy iteration</a>, are both applications of dynamic programming.

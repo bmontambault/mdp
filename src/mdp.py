@@ -332,7 +332,7 @@ class MDP:
         grid = self.get_grid_total_rewards()
         sns.heatmap(np.round(grid,2), annot=True, cbar=False)
 
-"""
+
 size = 5
 state_rewards_dict = {(3,3):1, (0,0):2}
 blocked_states_list = [(2,3), (2,4), (2,2)]
@@ -340,4 +340,3 @@ discount=.9
 mdp = MDP(state_rewards_dict, blocked_states_list,
                  discount, size=size)
 mdp.value_iteration()
-"""
