@@ -35,7 +35,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 	</p>
 
 	<p>
-	As an example we look at an environment where we recieve a reward of 1 in the states (0,0) and (3,3), and no reward in any other states. The states (2,2), (2,3), and (2,4) are blocked off and cannot be traversed. We initialize the value function to be 0 for every state.
+	As an example we look at an environment where we receive a reward of 2 at state (0,0) a reward of 1 at state (3,3), and no reward in any other states. The states (2,2), (2,3), and (2,4) are blocked off and cannot be traversed. We initialize the value function to be 0 for every state.
 	</p>
 	<div id='table1'>
 		{{table1|safe}}
@@ -58,7 +58,7 @@ V_{i+1}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{i}(s'))
 	<div lang="latex">
 	V_{2}(s) = \text{max}_{a} \sum_{s'}P(s, a, s')(R(s, a, s') + \gamma V_{1}(s'))
 	</div>
-	Here the discount factor <img src="http://latex.codecogs.com/gif.latex?\gamma" border="0"/> comes into play. If the discount factor is close to 1, <img src="http://latex.codecogs.com/gif.latex?V_{2}(s)" border="0"/> will depend heavily on <img src="http://latex.codecogs.com/gif.latex?V_{1}(s)" border="0"/>. If the discount factor is closer to 1, <img src="http://latex.codecogs.com/gif.latex?V_{2}(s)" border="0"/> will depend mostly on the immediate reward at <img src="http://latex.codecogs.com/gif.latex?s" border="0"/>. In this example we set <img src="http://latex.codecogs.com/gif.latex?\gamma=0.9" border="0"/>. For (0,0) and (3,3), our best 2 moves are still to stay put. The value function is therefore given by the reward gained from the first "stay" move plust the reward given from the second "stay" move times the discount factor. This is also true for the states adjacent to (0,0) and (3,3). For states that are two moves from (0,0) or (3,3), the value is given by the reward of the closest state adjacent to (0,0)/(3,3) which is 0 plus  the reward of (0,0)/(3,3) times the discount factor.
+	Here the discount factor <img src="http://latex.codecogs.com/gif.latex?\gamma" border="0"/> comes into play. If the discount factor is close to 1, <img src="http://latex.codecogs.com/gif.latex?V_{2}(s)" border="0"/> will depend heavily on <img src="http://latex.codecogs.com/gif.latex?V_{1}(s)" border="0"/>. If the discount factor is closer to 1, <img src="http://latex.codecogs.com/gif.latex?V_{2}(s)" border="0"/> will depend mostly on the immediate reward at <img src="http://latex.codecogs.com/gif.latex?s" border="0"/>. In this example we set <img src="http://latex.codecogs.com/gif.latex?\gamma=0.9" border="0"/>. For (0,0) and (3,3), our best 2 moves are still to stay put. The value function is therefore given by the reward gained from the first "stay" move plus the reward given from the second "stay" move times the discount factor. This is also true for the states adjacent to (0,0) and (3,3). For states that are two moves from (0,0) or (3,3), the value is given by the reward of the closest state adjacent to (0,0)/(3,3) which is 0 plus  the reward of (0,0)/(3,3) times the discount factor.
 	</p>
 	<div id='table3'>
 		{{table3|safe}}
